@@ -2,16 +2,16 @@
 use Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodType;
 
 /**
- * Dummy Payments Blocks integration
+ * Finpay Payments Blocks integration
  *
  * @since 1.0.3
  */
-final class WC_Gateway_Dummy_Blocks_Support extends AbstractPaymentMethodType {
+final class WC_Gateway_Finpay_Blocks_Support extends AbstractPaymentMethodType {
 
 	/**
 	 * The gateway instance.
 	 *
-	 * @var WC_Gateway_Dummy
+	 * @var WC_Gateway_Finpay
 	 */
 	private $gateway;
 
@@ -20,13 +20,13 @@ final class WC_Gateway_Dummy_Blocks_Support extends AbstractPaymentMethodType {
 	 *
 	 * @var string
 	 */
-	protected $name = 'dummy';
+	protected $name = 'finpay';
 
 	/**
 	 * Initializes the payment method type.
 	 */
 	public function initialize() {
-		$this->settings = get_option( 'woocommerce_dummy_settings', [] );
+		$this->settings = get_option( 'woocommerce_finpay_settings', [] );
 		$gateways       = WC()->payment_gateways->payment_gateways();
 		$this->gateway  = $gateways[ $this->name ];
 	}
@@ -47,17 +47,17 @@ final class WC_Gateway_Dummy_Blocks_Support extends AbstractPaymentMethodType {
 	 */
 	public function get_payment_method_script_handles() {
 		$script_path       = '/assets/js/frontend/blocks.js';
-		$script_asset_path = WC_Dummy_Payments::plugin_abspath() . 'assets/js/frontend/blocks.asset.php';
+		$script_asset_path = WC_Finpay_Payments::plugin_abspath() . 'assets/js/frontend/blocks.asset.php';
 		$script_asset      = file_exists( $script_asset_path )
 			? require( $script_asset_path )
 			: array(
 				'dependencies' => array(),
 				'version'      => '1.2.0'
 			);
-		$script_url        = WC_Dummy_Payments::plugin_url() . $script_path;
+		$script_url        = WC_Finpay_Payments::plugin_url() . $script_path;
 
 		wp_register_script(
-			'wc-dummy-payments-blocks',
+			'wc-finpay-payments-blocks',
 			$script_url,
 			$script_asset[ 'dependencies' ],
 			$script_asset[ 'version' ],
@@ -65,10 +65,10 @@ final class WC_Gateway_Dummy_Blocks_Support extends AbstractPaymentMethodType {
 		);
 
 		if ( function_exists( 'wp_set_script_translations' ) ) {
-			wp_set_script_translations( 'wc-dummy-payments-blocks', 'woocommerce-gateway-dummy', WC_Dummy_Payments::plugin_abspath() . 'languages/' );
+			wp_set_script_translations( 'wc-finpay-payments-blocks', 'woocommerce-gateway-finpay', WC_Finpay_Payments::plugin_abspath() . 'languages/' );
 		}
 
-		return [ 'wc-dummy-payments-blocks' ];
+		return [ 'wc-finpay-payments-blocks' ];
 	}
 
 	/**

@@ -4,10 +4,10 @@ import { registerPaymentMethod } from '@woocommerce/blocks-registry';
 import { decodeEntities } from '@wordpress/html-entities';
 import { getSetting } from '@woocommerce/settings';
 
-const settings = getSetting( 'dummy_data', {} );
+const settings = getSetting( 'finpay_data', {} );
 
 const defaultLabel = __(
-	'Dummy Payments',
+	'Finpay Payments',
 	'woo-gutenberg-products-block'
 );
 
@@ -29,10 +29,10 @@ const Label = ( props ) => {
 };
 
 /**
- * Dummy payment method config object.
+ * Finpay payment method config object.
  */
-const Dummy = {
-	name: "dummy",
+const Finpay = {
+	name: "finpay",
 	label: <Label />,
 	content: <Content />,
 	edit: <Content />,
@@ -43,4 +43,4 @@ const Dummy = {
 	},
 };
 
-registerPaymentMethod( Dummy );
+registerPaymentMethod( Finpay );
