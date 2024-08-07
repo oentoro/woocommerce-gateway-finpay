@@ -229,7 +229,10 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 			'order' => $order_data,
 
 			'url' => [
-				'callbackUrl' => home_url('/') . 'wc-api/WC_Gateway_Finpay',
+				'callbackUrl' => home_url('/') . 'wc-api/finpay?order='.$order_id,
+				'backUrl' => get_permalink(wc_get_page_id('shop')),
+				'failUrl' => home_url('/') . 'wc-api/finpay?status=gagal',
+				'successUrl' => home_url('/') . 'wc-api/finpay?status=sukses'
 			]
 		];
 
@@ -257,6 +260,7 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 		$response = json_decode($response['body']);
 		if ($response->responseCode == '2000000') {
 			WC()->cart->empty_cart();
+			$this->set_finish_url_user_cookies($order);
 			$order->update_status('pending', __('Awaiting payment', 'woothemes'));
 			return array(
 				'result' => 'success',
@@ -306,9 +310,11 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 
 	public function webhook()
 	{
-
+		$logger = new WC_Logger;
+		$this->init_settings();
 
 		if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+			$logger->info('Masuk ke get');
 			if ($_GET['status'] == 'sukses') {
 				$this->checkAndRedirectUserToFinishUrl();
 			} elseif ($_GET['status'] == 'gagal') {
@@ -318,8 +324,7 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 			exit();
 		}
 
-		$logger = new WC_Logger;
-		$this->init_settings();
+
 		$input_source = "php://input";
 		$raw_notification = json_decode(file_get_contents($input_source), true);
 		$logger->info('RECEIVED NOTIFICATION: ' . json_encode($raw_notification));
@@ -368,5 +373,12 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 			// else, unauthorized user, redirect to shop homepage by default.
 			wp_redirect(get_permalink(wc_get_page_id('shop')));
 		}
+	}
+
+	public function set_finish_url_user_cookies($order)
+	{
+	  $cookie_name = 'wc_finpay_last_order_finish_url';
+	  $order_finish_url = $order->get_checkout_order_received_url();
+	  setcookie($cookie_name, $order_finish_url);
 	}
 }
