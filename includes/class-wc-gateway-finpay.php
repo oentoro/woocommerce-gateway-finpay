@@ -3,7 +3,7 @@
 /**
  * WC_Gateway_Finpay class
  *
- * @author   SomewhereWarm <info@somewherewarm.gr>
+ * @author   Oentoro <caisaroentoro@gmail.com>
  * @package  WooCommerce Finpay Payments Gateway
  * @since    1.0.0
  */
@@ -12,7 +12,7 @@
 if (!defined('ABSPATH')) {
 	exit;
 }
-
+   
 /**
  * Finpay Gateway.
  *
@@ -43,8 +43,8 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 	 */
 	public $id = 'finpay';
 
-	protected $sandbox_key_url;
-	protected $production_key_url;
+	private $sandbox_url = 'https://devo.finnet.co.id/pg/payment/card/initiate';
+	private $production_url = 'https://live.finnet.co.id/pg/payment/card/initiate';
 
 	/**
 	 * Constructor for the gateway.
@@ -52,9 +52,7 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 	public function __construct()
 	{
 
-		$this->sandbox_key_url = 'https://devo.finnet.co.id/pg/payment/card/initiate';
-		$this->production_key_url = 'https://live.finnet.co.id/pg/payment/card/initiate';
-		$this->icon               = "https://storage.googleapis.com/finpay-pg-assets/merchant/ic_finpay.png";
+		$this->icon               = apply_filters('woocommerce_finpay_gateway_icon');
 		$this->has_fields         = false;
 		$this->supports           = array(
 			'pre-orders',
@@ -84,7 +82,7 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 		// Actions.
 		add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
 		add_action('woocommerce_scheduled_subscription_payment_finpay', array($this, 'process_subscription_payment'), 10, 2);
-		add_action('woocommerce_api_' . $this->id, array($this, 'webhook'));
+		// add_action('woocommerce_api_' . $this->id, array($this, 'webhook'));
 	}
 
 	/**
@@ -160,19 +158,16 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 	public function process_payment($order_id)
 	{
 
-		global $wp;
-		$this->init_settings();
-
 		$order = wc_get_order($order_id);
-		$env = $this->settings['select_finpay_environment'];
+		$env = $this->get_option('select_finpay_environment');
 		if ($env == "sandbox") {
-			$url = 'https://devo.finnet.co.id/pg/payment/card/initiate';
-			$username = $this->settings['username_sandbox'];
-			$password = $this->settings['password_sandbox'];
+			$url = $this -> sandbox_url;
+			$username = $this->get_option('username_sandbox');
+			$password = $this->get_option('password_sandbox');
 		} else {
-			$url = 'https://live.finnet.co.id/pg/payment/card/initiate';
-			$username = $this->settings['username_production'];
-			$password = $this->settings['password_production'];
+			$url = $this -> production_url;
+			$username = $this->get_option('username_production');
+			$password = $this->get_option('password_production');
 		}
 
 		$phone = $order->get_billing_phone();
@@ -216,12 +211,6 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 			'description' => 'Order ID: ' . $order_id,
 		];
 
-		// $params['url']['callbackUrl'] = 
-		// var_dump($params['url']['callbackUrl']);
-		// $params['url']['successUrl'] = home_url('/') . "?wc-api=WC_Gateway_Finpay&status=sukses";
-		// $params['url']['backUrl'] = get_permalink(wc_get_page_id('shop'));
-		// $params['url']['failUrl'] = home_url('/') . "?wc-api=WC_Gateway_Finpay&status=gagal";
-
 		$body = [
 			'merchant_id' => $username,
 			'merchant_pwd' => $password,
@@ -229,7 +218,7 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 			'order' => $order_data,
 
 			'url' => [
-				'callbackUrl' => home_url('/') . 'wc-api/finpay?order='.$order_id,
+				'callbackUrl' => home_url('/') . 'wc-api/finpay?order=' . $order_id,
 				'backUrl' => get_permalink(wc_get_page_id('shop')),
 				'failUrl' => home_url('/') . 'wc-api/finpay?status=gagal',
 				'successUrl' => home_url('/') . 'wc-api/finpay?status=sukses'
@@ -271,23 +260,6 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 			$order->update_status('failed', $message);
 			throw new Exception($message);
 		}
-
-		// if ('success' === $payment_result) {
-		// 	// $order->payment_complete();
-
-		// 	// Remove cart
-		// 	WC()->cart->empty_cart();
-
-		// 	// Return thankyou redirect
-		// 	return array(
-		// 		'result' 	=> 'success',
-		// 		'redirect'	=> $this->get_return_url($order)
-		// 	);
-		// } else {
-		// 	$message = __('Order payment failed. To make a successful payment using Finpay Payments, please review the gateway settings.', 'woocommerce-gateway-finpay');
-		// 	// $order->update_status('failed', $message);
-		// 	throw new Exception($message);
-		// }
 	}
 
 	/**
@@ -308,7 +280,7 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 		}
 	}
 
-	public function webhook()
+	private function webhook()
 	{
 		$logger = new WC_Logger;
 		$this->init_settings();
@@ -351,20 +323,27 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 		$signature = hash_hmac("sha512", json_encode($raw_notification), $key);
 
 		$logger->info('signature: ' . $signature . ', incoming signature: ' . $incoming_signature);
-		// if ($raw_notification['result']['payment']['status'] == 'PAID' || ($raw_notification['result']['payment']['status'] == 'CAPTURED' && $raw_notification['sourceOfFunds']['type'] == 'cc')) {
+		// 
 		if ($signature == $incoming_signature) {
-			$order_id = wc_get_order($raw_notification['order']['id']);
-			// @TODO: relocate this check into the function itself, to prevent unnecessary double DB query load
-			$order_id->payment_complete();
-			header('HTTP/1.1 200 OK');
-			die('00');
+			if ($raw_notification['result']['payment']['status'] == 'PAID' || ($raw_notification['result']['payment']['status'] == 'CAPTURED' && $raw_notification['sourceOfFunds']['type'] == 'cc')) {
+				$order = wc_get_order($raw_notification['order']['id']);
+				// @TODO: relocate this check into the function itself, to prevent unnecessary double DB query load
+				$order->payment_complete();
+				header('HTTP/1.1 200 OK');
+				die('00');
+			} else {
+				$order = wc_get_order($raw_notification['order']['id']);
+				$order->failed();
+				header('HTTP/1.1 500 Error');
+				die('-1');
+			}
 		} else {
 			header('HTTP/1.1 401 Error');
 			die('-1');
 		}
 	}
 
-	public function checkAndRedirectUserToFinishUrl()
+	private function checkAndRedirectUserToFinishUrl()
 	{
 		if (isset($_COOKIE['wc_finpay_last_order_finish_url'])) {
 			// authorized transacting-user
@@ -375,10 +354,10 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 		}
 	}
 
-	public function set_finish_url_user_cookies($order)
+	private function set_finish_url_user_cookies($order)
 	{
-	  $cookie_name = 'wc_finpay_last_order_finish_url';
-	  $order_finish_url = $order->get_checkout_order_received_url();
-	  setcookie($cookie_name, $order_finish_url);
+		$cookie_name = 'wc_finpay_last_order_finish_url';
+		$order_finish_url = $order->get_checkout_order_received_url();
+		setcookie($cookie_name, $order_finish_url);
 	}
 }

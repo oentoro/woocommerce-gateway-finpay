@@ -2,12 +2,12 @@
 
 /**
  * Plugin Name: WooCommerce Finpay Payments Gateway
- * Plugin URI: https://somewherewarm.com/
+ * Plugin URI: https://hub.finpay.id/
  * Description: Adds the Finpay Payments gateway to your WooCommerce website.
  * Version: 1.0.9
  *
- * Author: SomewhereWarm
- * Author URI: https://somewherewarm.com/
+ * Author: Oentoro
+ * Author URI: https://oentoro.blog/
  *
  * Text Domain: woocommerce-gateway-finpay
  * Domain Path: /i18n/languages/
@@ -15,7 +15,7 @@
  * Requires at least: 4.2
  * Tested up to: 4.9
  *
- * Copyright: © 2009-2023 Emmanouil Psychogyiopoulos.
+ * Copyright: © 2024 Caisar Oentoro.
  * License: GNU General Public License v3.0
  * License URI: http://www.gnu.org/licenses/gpl-3.0.html
  */

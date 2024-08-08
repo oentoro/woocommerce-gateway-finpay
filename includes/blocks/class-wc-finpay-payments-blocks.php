@@ -4,7 +4,7 @@ use Automattic\WooCommerce\Blocks\Payments\Integrations\AbstractPaymentMethodTyp
 /**
  * Finpay Payments Blocks integration
  *
- * @since 1.0.3
+ * @since 1.0.0CV   
  */
 final class WC_Gateway_Finpay_Blocks_Support extends AbstractPaymentMethodType {
 
@@ -28,6 +28,8 @@ final class WC_Gateway_Finpay_Blocks_Support extends AbstractPaymentMethodType {
 	public function initialize() {
 		$this->settings = get_option( 'woocommerce_finpay_settings', [] );
 		$gateways       = WC()->payment_gateways->payment_gateways();
+
+		echo json_encode($gateways);exit();
 		$this->gateway  = $gateways[ $this->name ];
 	}
 
