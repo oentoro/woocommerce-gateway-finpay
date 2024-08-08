@@ -12,7 +12,7 @@
 if (!defined('ABSPATH')) {
 	exit;
 }
-   
+
 /**
  * Finpay Gateway.
  *
@@ -52,7 +52,7 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 	public function __construct()
 	{
 
-		$this->icon               = apply_filters('woocommerce_finpay_gateway_icon');
+		$this->icon               = apply_filters('woocommerce_finpay_gateway_icon', '');
 		$this->has_fields         = false;
 		$this->supports           = array(
 			'pre-orders',
@@ -73,16 +73,10 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 		$this->init_form_fields();
 		$this->init_settings();
 
-		// Define user set variables.
-		$this->title                    = $this->get_option('title');
-		$this->description              = $this->get_option('description');
-		$this->instructions             = $this->get_option('instructions', $this->description);
-		$this->hide_for_non_admin_users = $this->get_option('hide_for_non_admin_users');
-
 		// Actions.
 		add_action('woocommerce_update_options_payment_gateways_' . $this->id, array($this, 'process_admin_options'));
 		add_action('woocommerce_scheduled_subscription_payment_finpay', array($this, 'process_subscription_payment'), 10, 2);
-		// add_action('woocommerce_api_' . $this->id, array($this, 'webhook'));
+		add_action('woocommerce_api_' . $this->id, array($this, 'webhook'));
 	}
 
 	/**
@@ -111,7 +105,7 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 			'username_sandbox'  => array(
 				'title'         => __("Merchant ID - Sandbox", 'finpay-woocommerce'),
 				'type'          => 'text',
-				'description'   => sprintf(__('Input your finpay\'s Merchant ID. Get the Merchant ID <a href="%s" target="_blank">here</a>', 'finpay-woocommerce'), $this->sandbox_key_url),
+				'description'   => sprintf(__('Input your finpay\'s Merchant ID. Get the Merchant ID <a href="%s" target="_blank">here</a>', 'finpay-woocommerce'), $this->sandbox_url),
 				'default'       => '',
 				'class'         => 'sandbox_settings toggle-finpay',
 			),
@@ -119,7 +113,7 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 			'password_sandbox'  => array(
 				'title'         => __("Merchant Key - Sandbox", 'finpay-woocommerce'),
 				'type'          => 'password',
-				'description'   => sprintf(__('Input your finpay\'s Merchant Key. Get the password <a href="%s" target="_blank">here</a>', 'finpay-woocommerce'), $this->sandbox_key_url),
+				'description'   => sprintf(__('Input your finpay\'s Merchant Key. Get the password <a href="%s" target="_blank">here</a>', 'finpay-woocommerce'), $this->sandbox_url),
 				'default'       => '',
 				'class'         => 'sandbox_settings toggle-finpay'
 			),
@@ -127,7 +121,7 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 			'username_production'    => array(
 				'title'         => __("Merchant ID - Production", 'finpay-woocommerce'),
 				'type'          => 'text',
-				'description'   => sprintf(__('Input your <b>Production</b> Merchant ID. Get the key <a href="%s" target="_blank">here</a>', 'finpay-woocommerce'), $this->production_key_url),
+				'description'   => sprintf(__('Input your <b>Production</b> Merchant ID. Get the key <a href="%s" target="_blank">here</a>', 'finpay-woocommerce'), $this->production_url),
 				'default'       => '',
 				'class'         => 'production_settings toggle-finpay',
 			),
@@ -135,7 +129,7 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 			'password_production'     => array(
 				'title'         => __("Merchant Key - Production", 'finpay-woocommerce'),
 				'type'          => 'password',
-				'description'   => sprintf(__('Input your <b>Production</b> Merchant Key. Get the key <a href="%s" target="_blank">here</a>', 'finpay-woocommerce'), $this->production_key_url),
+				'description'   => sprintf(__('Input your <b>Production</b> Merchant Key. Get the key <a href="%s" target="_blank">here</a>', 'finpay-woocommerce'), $this->production_url),
 				'default'       => '',
 				'class'         => 'production_settings toggle-finpay'
 			),
@@ -161,23 +155,21 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 		$order = wc_get_order($order_id);
 		$env = $this->get_option('select_finpay_environment');
 		if ($env == "sandbox") {
-			$url = $this -> sandbox_url;
+			$url = $this->sandbox_url;
 			$username = $this->get_option('username_sandbox');
 			$password = $this->get_option('password_sandbox');
 		} else {
-			$url = $this -> production_url;
+			$url = $this->production_url;
 			$username = $this->get_option('username_production');
 			$password = $this->get_option('password_production');
 		}
 
 		$phone = $order->get_billing_phone();
 		$zero = $phone[0];
-		// var_dump($zero);exit();
 
 		if ($zero == '0') {
 			$phone = '+62' . ltrim($phone, "0");
 		}
-		// var_dump($phone);exit();
 
 		$customer = [
 			'email' => $order->get_billing_email(),
@@ -241,15 +233,15 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 		if (is_wp_error($response)) {
 			$error_message = $response->get_error_message();
 			$message = __('Order payment failed: ' . $error_message, 'woocommerce-gateway-finpay');
-			// $order->update_status('failed', $message);
+			$order->update_status('failed', $message);
 			throw new Exception($message);
 		}
 
 		// var_dump($response); exit();
 		$response = json_decode($response['body']);
 		if ($response->responseCode == '2000000') {
-			WC()->cart->empty_cart();
 			$this->set_finish_url_user_cookies($order);
+			WC()->cart->empty_cart();
 			$order->update_status('pending', __('Awaiting payment', 'woothemes'));
 			return array(
 				'result' => 'success',
@@ -280,7 +272,7 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 		}
 	}
 
-	private function webhook()
+	public function webhook()
 	{
 		$logger = new WC_Logger;
 		$this->init_settings();
@@ -288,12 +280,12 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 		if ($_SERVER['REQUEST_METHOD'] == 'GET') {
 			$logger->info('Masuk ke get');
 			if ($_GET['status'] == 'sukses') {
+				// echo 'masuk sini';exit();
 				$this->checkAndRedirectUserToFinishUrl();
 			} elseif ($_GET['status'] == 'gagal') {
 				wp_redirect(get_permalink(wc_get_page_id('shop')));
 			}
 			die('This endpoint is for finpay notification URL (HTTP POST). This message will be shown if opened using browser (HTTP GET).');
-			exit();
 		}
 
 
@@ -333,7 +325,7 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 				die('00');
 			} else {
 				$order = wc_get_order($raw_notification['order']['id']);
-				$order->failed();
+				$order->update_status('failed', $raw_notification['result']['payment']['status']);
 				header('HTTP/1.1 500 Error');
 				die('-1');
 			}
@@ -343,7 +335,7 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 		}
 	}
 
-	private function checkAndRedirectUserToFinishUrl()
+	public function checkAndRedirectUserToFinishUrl()
 	{
 		if (isset($_COOKIE['wc_finpay_last_order_finish_url'])) {
 			// authorized transacting-user
@@ -354,10 +346,15 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 		}
 	}
 
-	private function set_finish_url_user_cookies($order)
+	public function set_finish_url_user_cookies($order)
 	{
 		$cookie_name = 'wc_finpay_last_order_finish_url';
-		$order_finish_url = $order->get_checkout_order_received_url();
-		setcookie($cookie_name, $order_finish_url);
+		$order_finish_url = $this->get_return_url($order);
+		if (!isset($_COOKIE[$cookie_name])) {
+			setcookie($cookie_name, $order_finish_url, time() + 86400, "/");
+		} else {
+			unset($_COOKIE[$cookie_name]);
+			setcookie($cookie_name, $order_finish_url, time() + 86400, "/");
+		}
 	}
 }

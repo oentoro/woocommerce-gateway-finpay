@@ -61,15 +61,16 @@ class WC_Finpay_Payments
 
 		$options = get_option('woocommerce_finpay_settings', array());
 
-		if (isset($options['hide_for_non_admin_users'])) {
-			$hide_for_non_admin_users = $options['hide_for_non_admin_users'];
-		} else {
-			$hide_for_non_admin_users = 'no';
-		}
+		// if (isset($options['hide_for_non_admin_users'])) {
+		// 	$hide_for_non_admin_users = $options['hide_for_non_admin_users'];
+		// } else {
+		// 	$hide_for_non_admin_users = 'no';
+		// }
 
-		if (('yes' === $hide_for_non_admin_users && current_user_can('manage_options')) || 'no' === $hide_for_non_admin_users) {
-			$gateways[] = 'WC_Gateway_Finpay';
-		}
+		// if (('yes' === $hide_for_non_admin_users && current_user_can('manage_options')) || 'no' === $hide_for_non_admin_users) {
+		// 	$gateways[] = 'WC_Gateway_Finpay';
+		// }
+		$gateways[] = 'WC_Gateway_Finpay';
 		return $gateways;
 	}
 

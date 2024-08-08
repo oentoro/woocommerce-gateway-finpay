@@ -29,7 +29,7 @@ final class WC_Gateway_Finpay_Blocks_Support extends AbstractPaymentMethodType {
 		$this->settings = get_option( 'woocommerce_finpay_settings', [] );
 		$gateways       = WC()->payment_gateways->payment_gateways();
 
-		echo json_encode($gateways);exit();
+		// echo json_encode($gateways);exit();
 		$this->gateway  = $gateways[ $this->name ];
 	}
 
