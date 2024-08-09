@@ -192,14 +192,14 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 			$line_subtotal     = $item_data['subtotal'];
 			$items[] = [
 				'name' => $item_name,
-				'quantity' => $quantity,
-				'unitPrice' => $line_subtotal,
+				'quantity' => intval($quantity),
+				'unitPrice' => floatval($line_subtotal),
 			];
 		}
 
 		$order_data = [
 			'id' => $order_id,
-			'amount' => $order->get_total(),
+			'amount' => floatval($order->get_total()),
 			'item' => $items,
 			'description' => 'Order ID: ' . $order_id,
 		];
@@ -217,12 +217,10 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 				'successUrl' => home_url('/') . 'wc-api/finpay?status=sukses'
 			]
 		];
-		// $log -> info('REQUEST TO FINPAY: '.json_encode($body));
+		$logger -> info('REQUEST FINPAY: '.json_encode($body));
 
 		$auth = "Basic " . base64_encode($username . ":" . $password);
-		// var_dump($auth);exit();
 		$response = wp_remote_post($url, [
-			// 'data_format' => 'body',
 			'headers' => [
 				'Accept' => 'application/json',
 				'Content-Type' => 'application/json',
@@ -233,7 +231,9 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 
 
 		if (is_wp_error($response)) {
+			
 			$error_message = $response->get_error_message();
+			$logger -> error('ERROR KETIKA REQUEST KE FINPAY '.$error_message);
 			$message = __('Order payment failed: ' . $error_message, 'woocommerce-gateway-finpay');
 			$order->update_status('failed', $message);
 			throw new Exception($message);
@@ -329,6 +329,7 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 			} else {
 				$order = wc_get_order($raw_notification['order']['id']);
 				$order->update_status('failed', $raw_notification['result']['payment']['status']);
+				$logger->error('Request payment failed: '.$raw_notification['result']['payment']['status']);
 				header('HTTP/1.1 500 Error');
 				die('-1');
 			}
@@ -340,11 +341,10 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 
 	public function checkAndRedirectUserToFinishUrl()
 	{
+		/** Wordpress menggunakan cookie daripada session */
 		if (isset($_COOKIE['wc_finpay_last_order_finish_url'])) {
-			// authorized transacting-user
 			wp_redirect($_COOKIE['wc_finpay_last_order_finish_url']);
 		} else {
-			// else, unauthorized user, redirect to shop homepage by default.
 			wp_redirect(get_permalink(wc_get_page_id('shop')));
 		}
 	}
