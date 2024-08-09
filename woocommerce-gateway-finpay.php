@@ -59,7 +59,7 @@ class WC_Finpay_Payments
 	public static function add_gateway($gateways)
 	{
 
-		$options = get_option('woocommerce_finpay_settings', array());
+		// $options = get_option('woocommerce_finpay_settings', array());
 
 		// if (isset($options['hide_for_non_admin_users'])) {
 		// 	$hide_for_non_admin_users = $options['hide_for_non_admin_users'];
@@ -124,8 +124,4 @@ class WC_Finpay_Payments
 	}
 }
 
-
-// function notification_callback($params){
-// 	var_dump($params);
-// }
 WC_Finpay_Payments::init();

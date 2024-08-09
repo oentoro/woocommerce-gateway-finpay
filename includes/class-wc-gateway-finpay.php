@@ -151,6 +151,7 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 	 */
 	public function process_payment($order_id)
 	{
+		$logger = new WC_Logger;
 
 		$order = wc_get_order($order_id);
 		$env = $this->get_option('select_finpay_environment');
@@ -216,6 +217,7 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 				'successUrl' => home_url('/') . 'wc-api/finpay?status=sukses'
 			]
 		];
+		// $log -> info('REQUEST TO FINPAY: '.json_encode($body));
 
 		$auth = "Basic " . base64_encode($username . ":" . $password);
 		// var_dump($auth);exit();
@@ -240,6 +242,7 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 		// var_dump($response); exit();
 		$response = json_decode($response['body']);
 		if ($response->responseCode == '2000000') {
+			$logger -> info('set cookie');
 			$this->set_finish_url_user_cookies($order);
 			WC()->cart->empty_cart();
 			$order->update_status('pending', __('Awaiting payment', 'woothemes'));
@@ -274,11 +277,11 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 
 	public function webhook()
 	{
-		$logger = new WC_Logger;
 		$this->init_settings();
 
+		$logger = new WC_Logger;
 		if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-			$logger->info('Masuk ke get');
+			// $logger->info('Masuk ke get');
 			if ($_GET['status'] == 'sukses') {
 				// echo 'masuk sini';exit();
 				$this->checkAndRedirectUserToFinishUrl();
@@ -350,11 +353,6 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 	{
 		$cookie_name = 'wc_finpay_last_order_finish_url';
 		$order_finish_url = $this->get_return_url($order);
-		if (!isset($_COOKIE[$cookie_name])) {
-			setcookie($cookie_name, $order_finish_url, time() + 86400, "/");
-		} else {
-			unset($_COOKIE[$cookie_name]);
-			setcookie($cookie_name, $order_finish_url, time() + 86400, "/");
-		}
+		setcookie($cookie_name, $order_finish_url, time() + 86400, "/");
 	}
 }
