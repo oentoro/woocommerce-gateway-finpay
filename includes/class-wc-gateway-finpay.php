@@ -69,6 +69,9 @@ class WC_Gateway_Finpay extends WC_Payment_Gateway
 		$this->method_title       = _x('Finpay Payment', 'Finpay payment method', 'woocommerce-gateway-finpay');
 		$this->method_description = __('Allows finpay payments.', 'woocommerce-gateway-finpay');
 
+		$this->title                    = 'Finpay Payment';
+		$this->description              = 'Pembayaran menggunakan finpay, dengan pilihan metode bayar variatif';
+
 		// Load the settings.
 		$this->init_form_fields();
 		$this->init_settings();

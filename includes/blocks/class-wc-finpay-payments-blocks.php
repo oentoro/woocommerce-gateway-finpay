@@ -80,8 +80,10 @@ final class WC_Gateway_Finpay_Blocks_Support extends AbstractPaymentMethodType {
 	 */
 	public function get_payment_method_data() {
 		return [
-			'title'       => $this->get_setting( 'title' ),
-			'description' => $this->get_setting( 'description' ),
+			// 'title'       => '$this->get_setting( 'title' )',
+			// 'description' => $this->get_setting( 'description' ),
+			'title' => 'Finpay Payment',
+			'description' => 'Pembayaran dengan metode bayar yang variatif',
 			'supports'    => array_filter( $this->gateway->supports, [ $this->gateway, 'supports' ] )
 		];
 	}
