@@ -7,7 +7,7 @@ Receive online payment on your WooCommerce store with Finpay payment gateway int
 
 ### Description
 
-This plugin will allow secure online payment on your WooCommerce store.
+This plugin will allow secure online payment on your WooCommerce store, support both block checkout (new checkout system of woocommerce) and classic checkout!
 
 Finpay-WooCommerce is official plugin from [Finpay](https://hub.finpay.id). Finpay is an online payment gateway. We strive to make payments simple & secure for both the merchant and customers. Support various online payment channel.
 
