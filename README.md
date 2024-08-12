@@ -1,4 +1,4 @@
-Finpay&nbsp; WooCommerce - Wordpress Payment Gateway Module
+Finpay&nbsp; WooCommerce - Wordpress Payment Gateway Module, Support Block Checkout!
 =====================================
 
 Finpay&nbsp; :heart: WooCommerce!
